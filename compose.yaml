@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - 5000:5000
+    volumes:
+      - log_archive:/app
+      - log_reports:/app
+      - issues:/app
+
+volumes:
+  log_archive:
+  log_reports:
+  issues:
+    
