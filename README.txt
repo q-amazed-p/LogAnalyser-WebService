@@ -8,9 +8,8 @@ TABLE OF CONTENTS:
 
 1. INTRODUCTION
 
-The use case I imagined based on the core and extra requirements of the assignment, is a service that may on one hand accept
-logs that are sent to it automatically, organise them and track repeating issues, and on the other, it may receive manual 
-requests with bug summaries to tie them to organised logs and keep track of understood issues. 
+Thehis is a simple service that may on one hand accept logs that are sent to it automatically, organise them and track repeating issues, and on the other, 
+it may receive manual requests with bug summaries to tie them to organised logs and keep track of understood issues. 
 
 To acheve that the service has three main functionalities:
 
@@ -36,7 +35,7 @@ So far it was only tested as a localhost. Concurrency was not factored in to the
 2. DEPLOYMENT
 
 The package includes following files: compose.yaml, Dockerfile, L_WS.py, requirements.txt and this very README.txt document.
-The compose.yaml providesm a simple startup and teardown on a system equipped with docker. 
+The compose.yaml provides a simple startup and teardown on a system equipped with docker. 
 The data is stored in docker volumes which provide persistence. 
 
 To start the service:
@@ -137,13 +136,9 @@ Processing POST request
     Regardless whether a log or a full issue is submitted, the first step is to proces the file stream, store it in
     the log archive and extract any exception lines from it (if found). Those are compared to the existing log reports 
     and, if confirmed to be new, they are saved separtely.
-        # The decision to retain full log archive and which files to compare (full or extracts) was somewhat arbitrary
-        # Aad mostly a consequence of design decisions following below. The weakness of chosen solution is that the
-        # system may overfill with archived logs pretty fast. One choice to be considered is to make the file comparison
-        # already (or additionally) on the full file to eliminate exact duplicated submissions. Another weakness of current 
-        # implementation is that archived logs are named by current time precise only down to seconds, which means that 
-        # if two requests are processed within one second the first log will be overwritten. I think adding fractions of second
-        # to log name would be a sufficient solution.
+        # One weakness of current implementation is that archived logs are named by current time precise only down to seconds, 
+        # which means that if two requests are processed within one second the first log will be overwritten. 
+        # Adding fractions of second to log name will substantially resolve this.
 
     The exception lines are considered to be any lines with 'warning', 'error' or 'callstack' in them. Additionally,
     two extra callstack types are considered: callstacks delineated by linebreaks and by 78 '=' characters. 
@@ -152,26 +147,20 @@ Processing POST request
     A particular detail of writing the log archive is, that it is conducted with the buffer limited to a single line. The reason for
     this is that, by the time the file comparison started, the standard, fully-buffered write was not completed by the system and,
     with about 30 final lines missing, matches were never found.
-        # This choice was made with sacrifice in efficiency. If I were to spend more time on this project there are alternative
-        # solutions to be considered here. First of all I think it would be optimal to make the comparison before the file is 
-        # written and stored, using data streamed from the request. Another improvement I would look into is writing in byte mode
-        # to see if it can better balance between resource use and time taken.
+        # This choice was made with sacrifice in efficiency. It would be optimal to make the comparison before the file is 
+        # written and stored, using data streamed from the request. Furtehmore, writing in byte mode could provide 
+        # better balance between resource use and time taken.
     
     The new log report is compared byte by byte with each log report previously created. This is done by filecmp python module
     and it checks for an exact match. 
-        # This comparison method would be very good to avoid storing exact log submission duplicates, but I don't think it is as good
-        # at determining unique failure scenarios, because it is likely to be thrown off by case-specific data (eg. user-specific ids
-        # or different names of assets of the same type). If I were to improve this I would try to find a solution based on degree of
-        # similarity. Maybe something like 90% data match would provide a better classification. To improve efficiency I would look 
-        # at chaging byte-by-byte comparison to comparing hashes or checksums.
+        # A solution based on degree of similarity would be able to account for case-specific data (eg. user-specific ids
+        # or different names of assets of the same type). Something like 90% data match could provide a better classification.
+        # To improve efficiency chaging byte-by-byte comparison to comparing hashes or checksums might be preferred.
 
     Any new log reports trigger creaton of an issue. It is a full open issue in case of a bug submission or a ghost issue,
     in case of a log submission. Ghost issues are like log-report metadata, mostly used to keep track of occurrences. 
     They are upgraded to full issues as soon as a matching bug submission is made. They are not visible on issue lists 
     and can only seen when requested directly by id (which is not typically user-facing).
-        # One practical inconvenience is the requirement to send a log with every bug submission. On one hand it may help assure 
-        # accurracy in assigning issues to existing log reports. On the other hand, I would like to add an option to submit bugs by
-        # providing an exisiting log report id instead of a full log.
 
     If an identical log report or issue is identified, instead an occurrence is counted towards it and the processing is finished. 
     
@@ -188,8 +177,7 @@ Adding an issue
     }
     Additionally a mapping of report-to-issue is added in the report_map.json
         # The system was designed to sustain more log-reports than issues, but it soon turned out that it runs a parity between them.
-        # This made report_map.json obsolete. I did not undertake simplification especially thinking that this arrangement
-        # may yet prove useful if other imporvements are added (such as degree of similarity comparison for log_reports).
+        # This made report_map.json essentially obsolete.
 
 
 Webpage lists
@@ -198,7 +186,7 @@ Webpage lists
     the occurrence date. It is designed to give an idea about all of the logs which were pocessed by the system. On the other hand,
     the issue list ignores ghosts, but in turn it gives a full list of issue properties allowing to track the bugs submitted 
     to the system.
-        #These lists need monospace font css very badly but it fell out of scope of this project.
+        #These lists need monospace font css very badly.
 
 
 Server
